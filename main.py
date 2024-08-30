@@ -84,6 +84,7 @@ while passwords == "":
     masterPass = input("Please enter your master password: ")
     masterPass = masterPass.encode()
     passwords = readpasses(masterPass)
+    passwords = passwords.decode()
 
 while True:
     clearScreen()
@@ -91,7 +92,10 @@ while True:
     choice = input("Enter your selection: ")
     match choice:
         case "1":
-            pass
+            if passwords == "Empty":
+                print(
+                    "There are no passwords currently saved. Please add passwords from the menu.")
+                input("Press enter to continue. ")
         case "2":
             pass
         case "3":
