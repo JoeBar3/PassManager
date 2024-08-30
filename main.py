@@ -5,6 +5,7 @@ import os
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+from sys import platform
 
 
 def passwordGen():
@@ -31,7 +32,6 @@ def setUp():
     salt = os.urandom(16)
     with open("salt.txt", "wb") as f:
         f.write(salt)
-    print(salt)
     kdf = PBKDF2HMAC(
         algorithm=hashes.SHA256(),
         length=32,
@@ -45,7 +45,57 @@ def setUp():
         f.write(encryptedContent)
 
 
-setUp()
-with open("salt.txt", "rb") as f:
-    salt = f.read()
-    print(salt)
+def readpasses(masterPass):
+    with open("salt.txt", "rb") as f:
+        salt = f.read()
+    kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=salt,
+        iterations=48000,
+    )
+    encryptionkey = base64.urlsafe_b64encode(kdf.derive(masterPass))
+    f = Fernet(encryptionkey)
+    with open("passwords.txt", "rb") as fi:
+        encryptedContent = fi.read()
+    try:
+        content = f.decrypt(encryptedContent)
+        return content
+    except:
+        print("Password incorrect")
+        return ""
+
+
+def clearScreen():
+    if platform == "win32":
+        os.system("cls")
+    else:
+        os.system("clear")
+
+
+try:
+    with open("salt.txt", "rb") as file:
+        salt = file.read()
+except IOError:
+    setUp()
+
+passwords = ""
+while passwords == "":
+    masterPass = input("Please enter your master password: ")
+    masterPass = masterPass.encode()
+    passwords = readpasses(masterPass)
+
+while True:
+    clearScreen()
+    print("MAIN MENU:\n1: Read passwords\n2: Add a password\n3:Change your master password\n4: Exit")
+    choice = input("Enter your selection: ")
+    match choice:
+        case "1":
+            pass
+        case "2":
+            pass
+        case "3":
+            pass
+        case "4":
+            clearScreen()
+            break
