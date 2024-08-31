@@ -73,6 +73,22 @@ def clearScreen():
         os.system("clear")
 
 
+def writepasses(masterPass, content):
+    with open("salt.txt", "rb") as f:
+        salt = f.read()
+    kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=salt,
+        iterations=48000,
+    )
+    encryptionkey = base64.urlsafe_b64encode(kdf.derive(masterPass))
+    f = Fernet(encryptionkey)
+    encryptedContent = f.encrypt(content)
+    with open("passwords.txt", "wb") as fi:
+        fi.write(encryptedContent)
+
+
 try:
     with open("salt.txt", "rb") as file:
         salt = file.read()
@@ -88,7 +104,7 @@ while passwords == "":
 
 while True:
     clearScreen()
-    print("MAIN MENU:\n1: Read passwords\n2: Add a password\n3:Change your master password\n4: Exit")
+    print("MAIN MENU:\n1: Read passwords\n2: Add a password\n3: Change your master password\n4: Exit")
     choice = input("Enter your selection: ")
     match choice:
         case "1":
@@ -97,9 +113,27 @@ while True:
                     "There are no passwords currently saved. Please add passwords from the menu.")
                 input("Press enter to continue. ")
         case "2":
-            pass
+            url = input("Enter the url of the site: ")
+            username = input("Enter the username for the site: ")
+            while True:
+                clearScreen()
+                print(
+                    "You need to select an option:\n1: Choose your own password\n2: Use a randomly generated password")
+                passChoice = input("Enter your selection: ")
+                match choice:
+                    case "1":
+                        password = input(f"Enter the password for {url}: ")
+                        break
+                    case "2":
+                        password = passwordGen()
+                        break
+            if passwords == "Empty":
+                passwords = url + "\n" + username + "\n" + password + "\n"
+            else:
+                passwords += url + "\n" + username + "\n" + password + "\n"
         case "3":
             pass
         case "4":
             clearScreen()
+            writepasses(masterPass, passwords.encode())
             break
