@@ -27,7 +27,8 @@ def ispunctuation(char):
 
 
 def setUp():
-    masterPass = input("Enter your master password: ")
+    print("Welcome to the password manager.")
+    masterPass = input("Please choose a master password: ")
     masterPass = masterPass.encode()
     salt = os.urandom(16)
     with open("salt.txt", "wb") as f:
@@ -89,9 +90,29 @@ def writepasses(masterPass, content):
         fi.write(encryptedContent)
 
 
+def cleanPasses(passwords):
+    cleanPass = passwords.split("\n")
+    length = int((len(cleanPass)-1)/3)
+    organisedPasses = []
+    account = ["", "", ""]
+    index = 0
+    for i in range(0, length):
+        for j in range(0, 3):
+            account[j] = cleanPass[index]
+            index += 1
+        organisedPasses.append(account.copy())
+    return organisedPasses
+
+
 try:
     with open("salt.txt", "rb") as file:
         salt = file.read()
+except IOError:
+    setUp()
+
+try:
+    with open("passwords.txt", "rb") as file:
+        check = file.read()
 except IOError:
     setUp()
 
@@ -100,7 +121,10 @@ while passwords == "":
     masterPass = input("Please enter your master password: ")
     masterPass = masterPass.encode()
     passwords = readpasses(masterPass)
-    passwords = passwords.decode()
+    if passwords != "":
+        passwords = passwords.decode()
+
+organisedPasses = cleanPasses(passwords)
 
 while True:
     clearScreen()
@@ -112,6 +136,36 @@ while True:
                 print(
                     "There are no passwords currently saved. Please add passwords from the menu.")
                 input("Press enter to continue. ")
+            else:
+                while True:
+                    clearScreen()
+                    print(
+                        "Please select an option:\n 1: Print all passwords\n 2: Print a specific password")
+                    outChoice = input("Enter your selection: ")
+                    clearScreen()
+                    match outChoice:
+                        case "1":
+                            for i in range(0, len(organisedPasses)):
+                                print("URL: " + organisedPasses[i][0])
+                                print("Username: " + organisedPasses[i][1])
+                                print("Password: " + organisedPasses[i][2])
+                            input("Press enter to continue. ")
+                            break
+                        case "2":
+                            Found = False
+                            urlToFind = input(
+                                "Please enter the URL of the site: ")
+                            for i in range(0, len(organisedPasses)):
+                                if organisedPasses[i][0] == urlToFind:
+                                    print("URL: " + organisedPasses[i][0])
+                                    print("Username: " + organisedPasses[i][1])
+                                    print("Password: " + organisedPasses[i][2])
+                                    input("Press enter to continue. ")
+                                    Found = True
+                            if Found == False:
+                                input("URL not found. Press enter to continue. ")
+                            break
+
         case "2":
             url = input("Enter the url of the site: ")
             username = input("Enter the username for the site: ")
@@ -120,7 +174,7 @@ while True:
                 print(
                     "You need to select an option:\n1: Choose your own password\n2: Use a randomly generated password")
                 passChoice = input("Enter your selection: ")
-                match choice:
+                match passChoice:
                     case "1":
                         password = input(f"Enter the password for {url}: ")
                         break
@@ -131,8 +185,13 @@ while True:
                 passwords = url + "\n" + username + "\n" + password + "\n"
             else:
                 passwords += url + "\n" + username + "\n" + password + "\n"
+            organisedPasses = cleanPasses(passwords)
         case "3":
-            pass
+            masterPass = input("Enter your new master password: ")
+            masterPass = masterPass.encode()
+            salt = os.urandom(16)
+            with open("salt.txt", "wb") as f:
+                f.write(salt)
         case "4":
             clearScreen()
             writepasses(masterPass, passwords.encode())
